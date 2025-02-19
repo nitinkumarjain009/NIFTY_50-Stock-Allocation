@@ -40,7 +40,7 @@ This project is an AI-driven **Nifty 50 stock allocation & recommendation system
 
 ### 1️⃣ **Clone the Repository**
 ```bash
-git clone https://github.com/shreyy2005/NIFTY50-STOCK-ALLOCATION.git
+git clone https://github.com/ShreyasDole/NIFTY50-STOCK-ALLOCATION.git
 cd NIFTY50-STOCK-ALLOCATION
 ```
 
