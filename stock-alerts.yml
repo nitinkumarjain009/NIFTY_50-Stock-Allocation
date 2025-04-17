@@ -33,7 +33,7 @@ jobs:
           pip install pandas requests python-telegram-bot
           
       - name: Process stock data and send alerts
-        run: python app.py
+        run: python stock_alerts.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
