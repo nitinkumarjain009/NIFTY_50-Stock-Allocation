@@ -9,7 +9,7 @@ jobs:
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      INVESTMENT_AMOUNT: "100000"    # Default investment: 100,000 INR
+      INVESTMENT_AMOUNT: 100000    # Default investment: 100,000 INR
       INVESTMENT_DURATION: "12"      # Default duration: 12 months
       RISK_LEVEL: "medium"           # Default risk level: medium
     steps:
