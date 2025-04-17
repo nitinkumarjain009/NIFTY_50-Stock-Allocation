@@ -36,7 +36,7 @@ else:
 
 # Telegram Bot Token and Chat ID
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-CHAT_ID = '711856868'
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 if not BOT_TOKEN or not CHAT_ID:
     print("Error: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID environment variables must be set.")
