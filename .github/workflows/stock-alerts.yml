@@ -22,6 +22,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: List workspace contents (for debugging)
+        run: ls -al
+
+      - name: Print content of stock_alerts.py (for debugging)
+        run: cat stock_alerts.py
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
