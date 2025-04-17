@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           source venv/bin/activate
-          pip install yfinance pandas numpy
+          pip install pandas numpy matplotlib yfinance
           pip install -r requirements.txt
         working-directory: ${{ github.workspace }}
 
