@@ -1,7 +1,8 @@
-#stock_alerts.py
+# stock_alerts.py
 import pandas as pd
 import telegram
 import os
+import asyncio
 
 # Load the data
 try:
@@ -33,19 +34,13 @@ async def generate_stock_alerts():
     if not recommendations.empty:
         for index, row in recommendations.iterrows():
             ticker = row['ticker']
-            one_year_return = f"{row['1Y_Return'] * 100:.1f}%"
-            volatility = f"{row['Volatility']:.2f}"
-
             message = (
-                f"📈 Stock Recommendation for {ticker} 📈\n"
-                f"✅ SMA 50 is above SMA 200 indicating a potential uptrend.\n"
-                f"💰 1 Year Return: {one_year_return}\n"
-                f"⚠️ Volatility: {volatility}"
+                f"🚀 {ticker} - BUY 📈\n"
+                f"Technical Reason: SMA 50 > SMA 200 indicates a potential uptrend."
             )
             await send_telegram_message(message)
     else:
         await send_telegram_message("No stock recommendations based on SMA crossover criteria.")
 
 if __name__ == '__main__':
-    import asyncio
     asyncio.run(generate_stock_alerts())
