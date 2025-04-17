@@ -1,0 +1,51 @@
+name: Stock Analysis Workflow
+on:
+  push:
+    branches:
+      - main
+jobs:
+  run-stock-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Create and activate virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Fetch Real-Time Stock Data
+        run: |
+          source venv/bin/activate
+          python modules/stock_data_fetcher.py
+
+      - name: Compute Stock Indicators
+        run: |
+          source venv/bin/activate
+          python modules/feature_engineering.py
+
+      - name: Generate Stock Recommendations
+        run: |
+          source venv/bin/activate
+          python modules/recommendation.py
+
+      - name: Optimize Portfolio Allocation
+        run: |
+          source venv/bin/activate
+          python models/portfolio_optimizer.py
+
+      - name: Run Full Stock Allocation System
+        run: |
+          source venv/bin/activate
+          python app.py
