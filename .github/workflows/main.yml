@@ -43,7 +43,7 @@ jobs:
           python modules/stock_data_fetcher.py
         working-directory: ${{ github.workspace }}
 
-      - name: Compute Stock Indicatorsme: Compute Stock Indicators
+      - name: Compute Stock Indicators
         run: |
           source venv/bin/activate
           python modules/feature_engineering.py
