@@ -29,8 +29,10 @@ def load_processed_data(filepath='data/processed.csv'):
             print(f"Error: Processed data file not found at {filepath}")
             return None
             
-        data = pd.read_csv(filepath)
+        # Read CSV with the first column as index (tickers)
+        data = pd.read_csv(filepath, index_col=0)
         print(f"Loaded processed data with shape: {data.shape}")
+        print(f"Index (tickers): {data.index.tolist()}")
         return data
     except Exception as e:
         print(f"Error loading processed data: {e}")
@@ -94,6 +96,10 @@ def generate_recommendations(data):
         # Sort by Strength (descending)
         recommendations = recommendations.sort_values('Strength', ascending=False)
         
+        # Debug output to verify tickers are available
+        print("Recommendations index (tickers):")
+        print(recommendations.index.tolist())
+        
         return recommendations
         
     except Exception as e:
@@ -154,20 +160,25 @@ def format_recommendations_message(recommendations):
     
     message = f"*NIFTY 50 Stock Recommendations - {current_date}*\n\n"
     
+    # Debug print
+    print("Recommendations dataframe structure:")
+    print(recommendations.head())
+    print(f"Index type: {type(recommendations.index)}")
+    
     # Add top 3 buy recommendations
     buy_recs = recommendations[recommendations['Signal'] == 'Buy'].head(3)
     if not buy_recs.empty:
         message += "*Top Buy Recommendations:*\n"
-        for idx, row in buy_recs.iterrows():
-            message += f"- {row.name}: Strength {row['Strength']}, Sharpe {row['Sharpe Ratio']:.2f}\n"
+        for ticker, row in buy_recs.iterrows():
+            message += f"- {ticker}: Strength {row['Strength']}, Sharpe {row['Sharpe Ratio']:.2f}\n"
         message += "\n"
     
     # Add top 3 sell recommendations
     sell_recs = recommendations[recommendations['Signal'] == 'Sell'].head(3)
     if not sell_recs.empty:
         message += "*Top Sell Recommendations:*\n"
-        for idx, row in sell_recs.iterrows():
-            message += f"- {row.name}: Strength {100-row['Strength']}, Sharpe {row['Sharpe Ratio']:.2f}\n"
+        for ticker, row in sell_recs.iterrows():
+            message += f"- {ticker}: Strength {100-row['Strength']}, Sharpe {row['Sharpe Ratio']:.2f}\n"
         message += "\n"
     
     # Add general market outlook
@@ -206,7 +217,8 @@ def send_processed_data(filepath='data/processed.csv'):
             send_telegram_message(message)
             return False
             
-        data = pd.read_csv(filepath)
+        # Read with index
+        data = pd.read_csv(filepath, index_col=0)
         
         # Format the data as a message
         current_date = datetime.now().strftime("%Y-%m-%d")
@@ -220,8 +232,15 @@ def send_processed_data(filepath='data/processed.csv'):
         if 'Average Return' in data.columns:
             top_performers = data.sort_values('Average Return', ascending=False).head(5)
             message += "\n*Top Performers (Average Return):*\n"
-            for idx, row in top_performers.iterrows():
-                message += f"- {row.name if hasattr(row, 'name') else idx}: {row['Average Return']:.4f}\n"
+            for ticker, row in top_performers.iterrows():
+                message += f"- {ticker}: {row['Average Return']:.4f}\n"
+        
+        # Add top 5 stocks by allocation weight
+        if 'Weight' in data.columns:
+            top_weights = data.sort_values('Weight', ascending=False).head(5)
+            message += "\n*Top Allocation Weights:*\n"
+            for ticker, row in top_weights.iterrows():
+                message += f"- {ticker}: {row['Weight']:.4f} ({row['Weight']*100:.1f}%)\n"
         
         # If message is too long, truncate it (Telegram has a 4096 character limit)
         if len(message) > 4000:
