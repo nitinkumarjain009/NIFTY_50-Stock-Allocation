@@ -6,31 +6,33 @@ import asyncio
 
 # Load the data
 try:
-    df = pd.read_csv('data/processed_data.csv')  # Let pandas infer the header (including the blank one)
+    df = pd.read_csv('data/processed.csv')
 except FileNotFoundError:
-    print("Error: data/processed_data.csv not found.")
+    print("Error: data/processed.csv not found.")
     exit()
 
-# Rename the first column (which might have a blank or unnamed header) to 'ticker'
-if df.columns[0] == '':  # Check if the first column's name is an empty string
+# Rename the first column to 'ticker' if it's blank or unnamed
+if df.columns[0] == '':
     df.rename(columns={'' : 'ticker'}, inplace=True)
-elif 'Unnamed: 0' in df.columns: # Check for a default unnamed column name
+elif 'Unnamed: 0' in df.columns:
     df.rename(columns={'Unnamed: 0' : 'ticker'}, inplace=True)
 else:
-    # If the first column has some other unexpected name, you might need to adjust this
-    print(f"Warning: First column header is '{df.columns[0]}'. Assuming it's the ticker.")
     df.rename(columns={df.columns[0] : 'ticker'}, inplace=True)
 
-# Ensure other columns have the expected names (in case there was no header at all)
+# Assign column names if not already present
 expected_columns = ['ticker', '1Y_Return', 'Volatility', 'SMA_50', 'SMA_200']
-if len(df.columns) < len(expected_columns):
-    print("Warning: Number of columns in CSV is less than expected. Check your file.")
-elif len(df.columns) == len(expected_columns):
-    df.columns = expected_columns
+if len(df.columns) != len(expected_columns):
+    if len(df.columns) < len(expected_columns):
+        df.columns = expected_columns[:len(df.columns)]
+        if 'ticker' not in df.columns:
+            print("Error: 'ticker' column not found after assigning names.")
+            exit()
+    else:
+        df = df.iloc[:, :len(expected_columns)]
+        df.columns = expected_columns
 else:
-    # If there are more columns, we assume the first few are the ones we need
-    df = df.iloc[:, :len(expected_columns)]
-    df.columns = expected_columns
+    if 'ticker' not in df.columns:
+        df.columns = expected_columns
 
 # Telegram Bot Token and Chat ID
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -44,24 +46,23 @@ async def send_telegram_message(message):
     """Sends a message to the specified Telegram chat."""
     bot = telegram.Bot(token=BOT_TOKEN)
     try:
-        await bot.send_message(chat_id=CHAT_ID, text=message)
+        await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode='HTML')
     except telegram.error.TelegramError as e:
         print(f"Error sending Telegram message: {e}")
 
 async def generate_stock_alerts():
-    """Generates stock alerts based on SMA crossover and sends them to Telegram."""
+    """Generates stock alerts based on SMA crossover and sends them to Telegram in one message with colorful background."""
     recommendations = df[df['SMA_50'] > df['SMA_200']].copy()
 
     if not recommendations.empty:
+        message = "<pre><span style='background-color: #e6ffe6;'><b>📈 Stock Recommendations (SMA 50 > SMA 200) 📈</b></span>\n\n"
         for index, row in recommendations.iterrows():
             ticker = row['ticker']
-            message = (
-                f"🚀 {ticker} - BUY 📈\n"
-                f"Technical Reason: SMA 50 > SMA 200 indicates a potential uptrend."
-            )
-            await send_telegram_message(message)
+            message += f"<span style='background-color: #ccffcc;'><b>🚀 {ticker}</b> - BUY</span>\n"
+        message += "</pre>"
+        await send_telegram_message(message)
     else:
-        await send_telegram_message("No stock recommendations based on SMA crossover criteria.")
+        await send_telegram_message("<pre>No stock recommendations based on SMA crossover criteria.</pre>")
 
 if __name__ == '__main__':
     asyncio.run(generate_stock_alerts())
