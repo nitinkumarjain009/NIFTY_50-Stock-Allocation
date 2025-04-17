@@ -1,3 +1,4 @@
+```yaml
 name: Stock Analysis Workflow
 on:
   push:
@@ -13,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Verify project structure
+        run: |
+          ls -R
+        working-directory: ${{ github.workspace }}
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -22,39 +28,49 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
+          echo "PYTHONPATH=$PYTHONPATH:$GITHUB_WORKSPACE" >> $GITHUB_ENV
+        working-directory: ${{ github.workspace }}
 
       - name: Install dependencies
         run: |
           source venv/bin/activate
           pip install yfinance pandas numpy python-telegram-bot
           pip install -r requirements.txt
+        working-directory: ${{ github.workspace }}
 
       - name: Fetch Real-Time Stock Data
         run: |
           source venv/bin/activate
           python modules/stock_data_fetcher.py
+        working-directory: ${{ github.workspace }}
 
       - name: Compute Stock Indicators
         run: |
           source venv/bin/activate
           python modules/feature_engineering.py
+        working-directory: ${{ github.workspace }}
 
       - name: Generate Stock Recommendations
         run: |
           source venv/bin/activate
           python modules/recommendation.py
+        working-directory: ${{ github.workspace }}
 
       - name: Send Recommendations to Telegram
         run: |
           source venv/bin/activate
           python -c "from telegram import Bot; import asyncio; async def send_message(): bot = Bot(token='$TELEGRAM_BOT_TOKEN'); await bot.send_message(chat_id='$TELEGRAM_CHAT_ID', text='Stock Recommendations Generated: Check the latest output from recommendation.py'); asyncio.run(send_message())"
+        working-directory: ${{ github.workspace }}
 
       - name: Optimize Portfolio Allocation
         run: |
           source venv/bin/activate
           python models/portfolio_optimizer.py
+        working-directory: ${{ github.workspace }}
 
       - name: Run Full Stock Allocation System
         run: |
           source venv/bin/activate
           python app.py
+        working-directory: ${{ github.workspace }}
+```
