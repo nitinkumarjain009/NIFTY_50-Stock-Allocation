@@ -6,9 +6,9 @@ import asyncio
 
 # Load the data
 try:
-    df = pd.read_csv('data/processed.csv')  # Let pandas infer the header (including the blank one)
+    df = pd.read_csv('data/processed_data.csv')  # Let pandas infer the header (including the blank one)
 except FileNotFoundError:
-    print("Error: data/processed.csv not found.")
+    print("Error: data/processed_data.csv not found.")
     exit()
 
 # Rename the first column (which might have a blank or unnamed header) to 'ticker'
