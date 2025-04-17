@@ -6,10 +6,31 @@ import asyncio
 
 # Load the data
 try:
-    df = pd.read_csv('data/processed_data.csv')
+    df = pd.read_csv('data/processed.csv')  # Let pandas infer the header (including the blank one)
 except FileNotFoundError:
     print("Error: data/processed.csv not found.")
     exit()
+
+# Rename the first column (which might have a blank or unnamed header) to 'ticker'
+if df.columns[0] == '':  # Check if the first column's name is an empty string
+    df.rename(columns={'' : 'ticker'}, inplace=True)
+elif 'Unnamed: 0' in df.columns: # Check for a default unnamed column name
+    df.rename(columns={'Unnamed: 0' : 'ticker'}, inplace=True)
+else:
+    # If the first column has some other unexpected name, you might need to adjust this
+    print(f"Warning: First column header is '{df.columns[0]}'. Assuming it's the ticker.")
+    df.rename(columns={df.columns[0] : 'ticker'}, inplace=True)
+
+# Ensure other columns have the expected names (in case there was no header at all)
+expected_columns = ['ticker', '1Y_Return', 'Volatility', 'SMA_50', 'SMA_200']
+if len(df.columns) < len(expected_columns):
+    print("Warning: Number of columns in CSV is less than expected. Check your file.")
+elif len(df.columns) == len(expected_columns):
+    df.columns = expected_columns
+else:
+    # If there are more columns, we assume the first few are the ones we need
+    df = df.iloc[:, :len(expected_columns)]
+    df.columns = expected_columns
 
 # Telegram Bot Token and Chat ID
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
