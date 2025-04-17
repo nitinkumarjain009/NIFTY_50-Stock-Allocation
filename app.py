@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 from datetime import datetime, timedelta
 import sys
+import os
+import subprocess
 
 def fetch_nifty50_data(period='1y'):
     """
@@ -37,14 +39,6 @@ def fetch_nifty50_data(period='1y'):
         print(f"Data shape: {data.shape}")
         print("Data columns structure:")
         print(data.columns)
-        print("\nColumn levels (if multi-index):")
-        if isinstance(data.columns, pd.MultiIndex):
-            for i, level in enumerate(data.columns.levels):
-                print(f"Level {i}: {list(level)}")
-        
-        # Print the first few rows to see the data structure
-        print("\nFirst few rows of data:")
-        print(data.head(2))
         
         if data.empty:
             print("Warning: Downloaded data is empty")
@@ -108,13 +102,6 @@ def calculate_metrics(data):
             else:
                 print("Could not find standard closing price columns")
                 return None
-                
-        # Print information about close_prices to verify
-        print(f"\nClose prices DataFrame shape: {close_prices.shape}")
-        print("Close prices DataFrame columns:")
-        print(close_prices.columns)
-        print("\nFirst few rows of close prices:")
-        print(close_prices.head(2))
         
         # Calculate daily returns
         returns = close_prices.pct_change().dropna()
@@ -223,13 +210,90 @@ def optimize_portfolio(data, num_portfolios=1000):
             'Sharpe Ratio': results[2, max_sharpe_idx]
         }
         
-        return optimal_weights, optimal_performance
+        return optimal_weights, optimal_performance, close_prices.columns
         
     except Exception as e:
         print(f"Error optimizing portfolio: {e}")
         import traceback
         traceback.print_exc()
-        return None, None
+        return None, None, None
+
+def save_processed_data(metrics, optimal_weights, tickers):
+    """
+    Save processed data to CSV file
+    
+    Args:
+        metrics (DataFrame): Financial metrics
+        optimal_weights (array): Optimal portfolio weights
+        tickers (Index): Stock tickers
+        
+    Returns:
+        bool: True if data was saved successfully, False otherwise
+    """
+    try:
+        # Create data directory if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        
+        # Save metrics to CSV
+        metrics.to_csv('data/metrics.csv')
+        
+        # Create a DataFrame with optimal weights
+        weights_df = pd.DataFrame({
+            'Ticker': tickers,
+            'Weight': optimal_weights
+        })
+        weights_df.to_csv('data/weights.csv', index=False)
+        
+        # Combine metrics and weights into a single processed DataFrame
+        processed = metrics.copy()
+        processed['Weight'] = pd.Series(optimal_weights, index=tickers)
+        
+        # Save processed data
+        processed.to_csv('data/processed.csv')
+        
+        print("Processed data saved to data directory")
+        return True
+        
+    except Exception as e:
+        print(f"Error saving processed data: {e}")
+        return False
+
+def run_recommendations():
+    """
+    Run the recommendations script to generate and send recommendations
+    
+    Returns:
+        bool: True if recommendations were generated successfully, False otherwise
+    """
+    try:
+        print("Running recommendations script...")
+        
+        # Check if recommendations.py exists
+        if not os.path.exists('recommendations.py'):
+            print("Error: recommendations.py not found")
+            return False
+            
+        # Make recommendations.py executable
+        os.chmod('recommendations.py', 0o755)
+        
+        # Run the recommendations script
+        result = subprocess.run(['python', 'recommendations.py'], 
+                                capture_output=True, 
+                                text=True)
+        
+        if result.returncode == 0:
+            print("Recommendations script executed successfully")
+            print(result.stdout)
+            return True
+        else:
+            print(f"Error running recommendations script: {result.returncode}")
+            print(f"Output: {result.stdout}")
+            print(f"Error: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"Error running recommendations script: {e}")
+        return False
 
 def main():
     """
@@ -265,7 +329,7 @@ def main():
     
     # Optimize portfolio
     print("\nOptimizing portfolio allocation...")
-    weights, performance = optimize_portfolio(data)
+    weights, performance, tickers = optimize_portfolio(data)
     
     if weights is not None and performance is not None:
         # Display results
@@ -274,12 +338,15 @@ def main():
         print(f"Expected Annual Risk: {performance['Risk']:.4f}")
         print(f"Sharpe Ratio: {performance['Sharpe Ratio']:.4f}")
         
-        # Get the ticker names
-        tickers = close_prices.columns if 'close_prices' in locals() else [f"Asset_{i}" for i in range(len(weights))]
-        
         print("\nOptimal Portfolio Weights:")
         for i, ticker in enumerate(tickers):
             print(f"{ticker}: {weights[i]:.4f}")
+            
+        # Save processed data
+        save_processed_data(metrics, weights, tickers)
+        
+        # Run recommendations script
+        run_recommendations()
     else:
         print("Failed to optimize portfolio.")
 
