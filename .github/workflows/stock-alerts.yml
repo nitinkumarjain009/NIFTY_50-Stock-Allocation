@@ -2,14 +2,10 @@ name: Stock Data Telegram Alerts
 
 on:
   schedule:
-    # Run at 10:00 AM, 1:00 PM, and 5:30 PM IST
-    - cron: '30 4 * * *'  # 10:00 AM IST (4:30 UTC)
-    - cron: '30 7 * * *'  # 1:00 PM IST (7:30 UTC)
-    - cron: '0 12 * * *'  # 5:30 PM IST (12:00 UTC)
-    # Check every 15 minutes for updates
+    - cron: '30 4 * * *'
+    - cron: '30 7 * * *'
+    - cron: '0 12 * * *'
     - cron: '*/15 * * * *'
-
-  # Trigger when file is updated (assuming using git repository)
   push:
     paths:
       - 'data/processed_data.csv'
@@ -17,10 +13,11 @@ on:
 jobs:
   analyze_and_notify:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          ref: main  # Explicitly specify the 'main' branch
 
       - name: List workspace contents (for debugging)
         run: ls -al
