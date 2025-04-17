@@ -7,8 +7,8 @@ jobs:
   run-stock-analysis:
     runs-on: ubuntu-latest
     env:
-      TELEGRAM_BOT_TOKEN: 8017759392:AAEwM-W-y83lLXTjlPl8sC_aBmizuIrFXnU
-      TELEGRAM_CHAT_ID: 711856868
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           source venv/bin/activate
-          pip install yfinance pandas numpy python-telegram-bot
+          pip install yfinance pandas numpy
           pip install -r requirements.txt
         working-directory: ${{ github.workspace }}
 
@@ -43,7 +43,7 @@ jobs:
           python modules/stock_data_fetcher.py
         working-directory: ${{ github.workspace }}
 
-      - name: Compute Stock Indicators
+      - name: Compute Stock Indicatorsme: Compute Stock Indicators
         run: |
           source venv/bin/activate
           python modules/feature_engineering.py
@@ -57,8 +57,7 @@ jobs:
 
       - name: Send Recommendations to Telegram
         run: |
-          source venv/bin/activate
-          python -c "from telegram import Bot; import asyncio; async def send_message(): bot = Bot(token='$TELEGRAM_BOT_TOKEN'); await bot.send_message(chat_id='$TELEGRAM_CHAT_ID', text='Stock Recommendations Generated: Check the latest output from recommendation.py'); asyncio.run(send_message())"
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage -d chat_id=${TELEGRAM_CHAT_ID} -d text="Stock Recommendations Generated: Check the latest output from recommendation.py"
         working-directory: ${{ github.workspace }}
 
       - name: Optimize Portfolio Allocation
