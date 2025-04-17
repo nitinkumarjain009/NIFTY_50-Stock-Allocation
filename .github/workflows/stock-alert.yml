@@ -1,15 +1,12 @@
-#Stock
 name: Stock Data Telegram Alerts
 
 on:
-  schedule:
-    - cron: '30 4 * * *'
-    - cron: '30 7 * * *'
-    - cron: '0 12 * * *'
-    - cron: '*/15 * * * *'
-  push:
-    paths:
-      - 'data/processed_data.csv'
+  workflow_dispatch:
+    inputs:
+      log_level:
+        description: 'Log level to use (info, debug)'
+        required: false
+        default: 'info'
 
 jobs:
   analyze_and_notify:
@@ -19,12 +16,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: main  # Explicitly specify the 'main' branch
-
-      - name: List workspace contents (for debugging)
-        run: ls -al
-
-      - name: Print content of stock_alerts.py (for debugging)
-        run: cat stock_alerts.py
 
       - name: Set up Python
         uses: actions/setup-python@v4
