@@ -1,4 +1,3 @@
-```yaml
 name: Stock Analysis Workflow
 on:
   push:
@@ -73,4 +72,3 @@ jobs:
           source venv/bin/activate
           python app.py
         working-directory: ${{ github.workspace }}
-```
