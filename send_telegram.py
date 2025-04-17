@@ -10,4 +10,8 @@ async def send_message():
     )
 
 if __name__ == "__main__":
-    asyncio.run(send_message())
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        loop.create_task(send_message())
+    else:
+        asyncio.run(send_message())
