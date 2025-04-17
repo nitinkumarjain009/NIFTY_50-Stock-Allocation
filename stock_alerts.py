@@ -6,7 +6,7 @@ import asyncio
 
 # Load the data
 try:
-    df = pd.read_csv('data/processed.csv')
+    df = pd.read_csv('data/processed_data.csv')
 except FileNotFoundError:
     print("Error: data/processed.csv not found.")
     exit()
