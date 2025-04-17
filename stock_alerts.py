@@ -1,3 +1,4 @@
+name stock_alerts.py
 import pandas as pd
 import telegram
 import os
